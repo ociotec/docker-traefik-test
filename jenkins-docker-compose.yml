@@ -1,0 +1,50 @@
+version: '3.7'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    ports:
+      - '8080'
+      - '50000'
+    environment:
+      JAVA_OPTS: -Dmail.smtp.starttls.enable=true
+    volumes:
+      - type: volume
+        source: jenkins_home
+        target: /var/jenkins_home
+        volume:
+          nocopy: true
+      - type: bind
+        source: /etc/timezone
+        target: /etc/timezone
+        read_only: true
+      - type: bind
+        source: /etc/localtime
+        target: /etc/localtime
+        read_only: true
+    networks:
+      - proxy_net
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        traefik.enable: 'true'
+        traefik.http.routers.http_jenkins.rule: 'Host(`jenkins.my.domain.com`)'
+        traefik.http.routers.http_jenkins.entrypoints: 'http'
+        traefik.http.routers.http_jenkins.middlewares: 'https_redirect'
+        traefik.http.routers.https_jenkins.rule: 'Host(`jenkins.my.domain.com`)'
+        traefik.http.routers.https_jenkins.entrypoints: 'https'
+        traefik.http.routers.https_jenkins.tls: 'true'
+        traefik.http.routers.https_jenkins.tls.certresolver: 'letsencrypt'
+        traefik.http.services.jenkins.loadbalancer.server.port: '8080'
+      placement:
+        constraints:
+          - node.labels.arch == x86
+          - node.labels.slow == no
+
+networks:
+  proxy_net:
+    external: true
+
+volumes:
+  jenkins_home:
