@@ -29,10 +29,9 @@ services:
       replicas: 1
       labels:
         traefik.enable: 'true'
-        traefik.http.routers.http_jenkins.rule: 'Host(`jenkins.my.domain.com`)'
+        traefik.http.routers.http_jenkins.rule: 'Host(`jenkins.my.domain`)'
         traefik.http.routers.http_jenkins.entrypoints: 'http'
-        traefik.http.routers.http_jenkins.middlewares: 'https_redirect'
-        traefik.http.routers.https_jenkins.rule: 'Host(`jenkins.my.domain.com`)'
+        traefik.http.routers.https_jenkins.rule: 'Host(`jenkins.my.domain`)'
         traefik.http.routers.https_jenkins.entrypoints: 'https'
         traefik.http.routers.https_jenkins.tls: 'true'
         traefik.http.routers.https_jenkins.tls.certresolver: 'letsencrypt'

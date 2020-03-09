@@ -2,15 +2,18 @@ version: '3.7'
 
 services:
   traefik:
-    image: traefik:2.1.6
+    image: traefik:2.2
     command:
       - '--log.level=WARN'
       - '--api.insecure=true'
       - '--providers.docker=true'
       - '--providers.docker.swarmMode=true'
       - '--providers.docker.exposedbydefault=false'
-      - '--entrypoints.http.address=:80'
-      - '--entrypoints.https.address=:443'
+      - '--providers.docker.network=proxy_net'
+      - '--entryPoints.http.address=:80'
+      - '--entryPoints.http.http.redirections.entryPoint.to=https'
+      - '--entryPoints.https.address=:443'
+      - '--entryPoints.https.http.tls=true'
       - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true'
       - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http'
       - '--certificatesresolvers.letsencrypt.acme.email=user@my.domain.com'
@@ -44,13 +47,6 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-    labels:
-      traefik.enable: 'true'
-      traefik.http.routers.http-catchall.rule: 'HostRegexp(`{host:.*}`)'
-      traefik.http.routers.http-catchall.entrypoints: 'http'
-      traefik.http.routers.http-catchall.middlewares: 'https_redirect'
-      traefik.http.middlewares.https_redirect.redirectscheme.scheme: 'https'
-      traefik.http.middlewares.https_redirect.redirectscheme.permanent: 'true'
   whoami:
     image: containous/whoami
     networks:
@@ -60,10 +56,8 @@ services:
         traefik.enable: 'true'
         traefik.http.routers.http_whoami.rule: 'Host(`whoami.my.domain`)'
         traefik.http.routers.http_whoami.entrypoints: 'http'
-        traefik.http.routers.http_whoami.middlewares: 'https_redirect'
         traefik.http.routers.https_whoami.rule: 'Host(`whoami.my.domain`)'
         traefik.http.routers.https_whoami.entrypoints: 'https'
-        traefik.http.routers.https_whoami.tls: 'true'
         traefik.http.routers.https_whoami.tls.certresolver: 'letsencrypt'
         traefik.http.services.whoami.loadbalancer.server.port: '80'
 
